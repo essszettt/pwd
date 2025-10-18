@@ -6,12 +6,14 @@
     /_/
     [print working directory]
 
-Application (dot command) to print the current working directory ZX Spectrum Next (wexactly like "CD" does)
+Application (dot command) to print the current working directory ZX Spectrum Next (exactly like "CD" does)
 
+--- 
 ### USAGE
 
 ![help.bmp](https://github.com/essszettt/pwd/blob/main/doc/help.bmp)
 
+---
 ### EXAMPLES
 
 ![help.bmp](https://github.com/essszettt/pwd/blob/main/doc/example.bmp)
