@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <errno.h>
 
 #include <arch/zxn.h>
@@ -368,51 +369,68 @@ int printCwd(void)
 /*----------------------------------------------------------------------------*/
 int normalizepath(unsigned char* acPath)
 {
-  int iReturn = EOK;
+  /*
+  ZX Spectrum Next Pfad-Normalisierung (in-place, joinbar)
+  - '\\' => '/'
+  - doppelte '/' zu einem '/'
+  - trailing '/' entfernen (ausser bei "/" => "/.")
+  - "/" wird zu "/."   (joinbar, aber bleibt im Root)
+  - "X:/" wird zu "X:"
+  Rueckgabe: EOK oder EINVAL bei Fehler.
+  */
 
-  if (0 != acPath)
+  if (NULL == acPath)
   {
-    size_t uiIdx;
-    enum
-    {
-      STATE_CUTTING = 0,
-      STATE_IDLE
-    } eState = STATE_CUTTING;
+    return EINVAL;
+  }
 
-    if (0 < (uiIdx = strlen(acPath)))
+  /* 1) '\' => '/' und doppelte '/' entfernen */
+  size_t r = 0, w = 0;
+  while ('\0' != acPath[r])
+  {
+    char c = acPath[r++];
+
+    if ('\\' == c)
     {
-      while (0 <= --uiIdx)
+      c = '/';
+    }
+
+    if ('/' == c)
+    {
+      if ((0 < w) && ('/' == acPath[w - 1]))
       {
-        if ('\\' == acPath[uiIdx])
-        {
-          acPath[uiIdx] = '/';
-        }
-
-        if (STATE_CUTTING == eState)
-        {
-          if ('/' == acPath[uiIdx])
-          {
-            acPath[uiIdx] = '\0';
-          }
-          else
-          {
-            eState = STATE_IDLE;
-          }
-        }
-
-        if (0 == uiIdx)
-        {
-          break;
-        }
+        continue;
       }
     }
-  }
-  else
-  {
-    iReturn = EINVAL;
+
+    acPath[w++] = c;
   }
 
-  return iReturn;
+  acPath[w] = '\0';
+
+  /* 2) Spezialfaelle fuer "joinbare" Basen */
+  if ((1 == w) && ('/' == acPath[0]))
+  {
+    /* "/" => "/." */
+    acPath[1] = '.';
+    acPath[2] = '\0';
+    return EOK;
+  }
+
+  if ((3 == w) && isalpha((unsigned char) acPath[0]) && (':' == acPath[1]) && ('/' == acPath[2]))
+  {
+    /* "X:/" => "X:" */
+    acPath[2] = '\0';
+    return EOK;
+  }
+
+  /* 3) Allgemein: trailing '/' entfernen */
+  while ((0 < w) && ('/' == acPath[w - 1]))
+  {
+    acPath[--w] = '\0';
+  }
+
+  return EOK;
 }
 
 
@@ -428,28 +446,28 @@ const unsigned char* zxn_strerror(int iCode)
   */
   static const errentry_t g_tErrTable[] =
   {
-    {EOK,         "no erro\xF2"},                      /* 'r' | 0x80 */
-    {EACCES,      "access denie\xE4"},                 /* 'd' | 0x80 */
-    {EBADF,       "bad fil\xE5"},                      /* 'e' | 0x80 */
-    {EBDFD,       "bad file descripto\xF2"},           /* 'r' | 0x80 */
-    {EDOM,        "out of domain of functio\xEE"},     /* 'n' | 0x80 */
-    {EFBIG,       "file too larg\xE5"},                /* 'e' | 0x80 */
-    {EINVAL,      "invalid valu\xE5"},                 /* 'e' | 0x80 */
-    {EMFILE,      "too many open file\xE5"},           /* 'e' | 0x80 */
+    {EOK,         "no erro"                   "\xF2"}, /* 'r' | 0x80 */
+    {EACCES,      "access denie"              "\xE4"}, /* 'd' | 0x80 */
+    {EBADF,       "bad fil"                   "\xE5"}, /* 'e' | 0x80 */
+    {EBDFD,       "bad file descripto"        "\xF2"}, /* 'r' | 0x80 */
+    {EDOM,        "out of domain of functio"  "\xEE"}, /* 'n' | 0x80 */
+    {EFBIG,       "file too larg"             "\xE5"}, /* 'e' | 0x80 */
+    {EINVAL,      "invalid valu"              "\xE5"}, /* 'e' | 0x80 */
+    {EMFILE,      "too many open file"        "\xE5"}, /* 'e' | 0x80 */
     {ENFILE,      "too many open files in syste\xED"}, /* 'm' | 0x80 */
-    {ENOLCK,      "no locks availabl\xE5"},            /* 'e' | 0x80 */
-    {ENOMEM,      "out of me\xED"},                    /* 'm' | 0x80 */
-    {ENOTSUP,     "not supporte\xE4"},                 /* 'd' | 0x80 */
-    {EOVERFLOW,   "overflo\xEF"},                      /* 'w' | 0x80 */
-    {ERANGE,      "out of rang\xE5"},                  /* 'e' | 0x80 */
-    {ESTAT,       "bad stat\xF4"},                     /* 't' | 0x80 */
-    {EAGAIN,      "resource temp. unavailabl\xE5"},    /* 'e' | 0x80 */
-    {EWOULDBLOCK, "operation would bloc\xEB"},         /* 'k' | 0x80 */
+    {ENOLCK,      "no locks availabl"         "\xE5"}, /* 'e' | 0x80 */
+    {ENOMEM,      "out of me"                 "\xED"}, /* 'm' | 0x80 */
+    {ENOTSUP,     "not supporte"              "\xE4"}, /* 'd' | 0x80 */
+    {EOVERFLOW,   "overflo"                   "\xEF"}, /* 'w' | 0x80 */
+    {ERANGE,      "out of rang"               "\xE5"}, /* 'e' | 0x80 */
+    {ESTAT,       "bad stat"                  "\xF4"}, /* 't' | 0x80 */
+    {EAGAIN,      "resource temp. unavailabl" "\xE5"}, /* 'e' | 0x80 */
+    {EWOULDBLOCK, "operation would bloc"      "\xEB"}, /* 'k' | 0x80 */
     /* ---------------- APPLICATION SPECIFIC ----------------------- */
-    {EBREAK,      "D BREAK - no repea\xF4"},           /* 't' | 0x80 */
-    {ETIMEOUT,    "timeout erro\xF2"},                 /* 'r' | 0x80 */
+    {EBREAK,      "D BREAK - no repea"        "\xF4"}, /* 't' | 0x80 */
+    {ETIMEOUT,    "timeout erro"              "\xF2"}, /* 'r' | 0x80 */
     /* ---------------- END-OF-LIST -------------------------------- */
-    {END_OF_LIST, "unknown erro\xF2"}                  /* 'r' | 0x80 */
+    {END_OF_LIST, "unknown erro"              "\xF2"}  /* 'r' | 0x80 */
   };
 
   const errentry_t* pIndex = g_tErrTable;
