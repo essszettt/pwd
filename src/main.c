@@ -59,6 +59,29 @@
 /*============================================================================*/
 
 /*============================================================================*/
+/*                               Strukturen                                   */
+/*============================================================================*/
+
+/*============================================================================*/
+/*                               Typ-Definitionen                             */
+/*============================================================================*/
+/*!
+Structure of an entry of the global error code and text table
+*/
+typedef struct _errentry
+{
+  /*!
+  Error code
+  */
+  int iCode;
+
+  /*!
+  Pointer to a textual description
+  */
+  const unsigned char* acText;
+} errentry_t;
+
+/*============================================================================*/
 /*                               Konstanten                                   */
 /*============================================================================*/
 
@@ -96,22 +119,6 @@ static struct _state
   int iExitCode;
 
 } g_tState;
-
-/*============================================================================*/
-/*                               Strukturen                                   */
-/*============================================================================*/
-
-/*============================================================================*/
-/*                               Typ-Definitionen                             */
-/*============================================================================*/
-/*!
-Structure of an entry of the global error code and text table
-*/
-typedef struct _errentry
-{
-  int iCode;
-  const unsigned char* acText;
-} errentry_t;
 
 /*============================================================================*/
 /*                               Prototypen                                   */
@@ -156,6 +163,13 @@ This function returns a pointer to a textual error message to given error code.
 @return Pointer to a human readable error message
 */
 const unsigned char* zxn_strerror(int iCode);
+
+/*!
+In this function cleans up the given path ('\\' => '/', remove trailing '/' )
+@param acPath Path to clean up
+@return "0" = no error
+*/
+int normalizepath(unsigned char* acPath);
 
 /*============================================================================*/
 /*                               Klassen                                      */
@@ -332,11 +346,70 @@ int showInfo(void)
 /*----------------------------------------------------------------------------*/
 int printCwd(void)
 {
-  int iReturn = EINVAL;
+  int iReturn = EOK;
 
   if (0 == (iReturn = esx_f_getcwd(g_tState.acPathName)))
   {
-    printf("%s\n", g_tState.acPathName);
+    normalizepath(g_tState.acPathName);
+    fprintf(stdout, "%s\n", g_tState.acPathName);
+  }
+  else
+  {
+    fprintf(stderr, "reading cwd failed: %d\n", iReturn);
+    iReturn = EBADF;
+  }
+
+  return iReturn;
+}
+
+
+/*----------------------------------------------------------------------------*/
+/* normalizepath()                                                            */
+/*----------------------------------------------------------------------------*/
+int normalizepath(unsigned char* acPath)
+{
+  int iReturn = EOK;
+
+  if (0 != acPath)
+  {
+    size_t uiIdx;
+    enum
+    {
+      STATE_CUTTING = 0,
+      STATE_IDLE
+    } eState = STATE_CUTTING;
+
+    if (0 < (uiIdx = strlen(acPath)))
+    {
+      while (0 <= --uiIdx)
+      {
+        if ('\\' == acPath[uiIdx])
+        {
+          acPath[uiIdx] = '/';
+        }
+
+        if (STATE_CUTTING == eState)
+        {
+          if ('/' == acPath[uiIdx])
+          {
+            acPath[uiIdx] = '\0';
+          }
+          else
+          {
+            eState = STATE_IDLE;
+          }
+        }
+
+        if (0 == uiIdx)
+        {
+          break;
+        }
+      }
+    }
+  }
+  else
+  {
+    iReturn = EINVAL;
   }
 
   return iReturn;

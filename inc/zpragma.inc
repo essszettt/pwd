@@ -1,6 +1,6 @@
 // limit the size of printf
 // #pragma printf = "%s %c %d %u"
-#pragma printf = "%s"
+#pragma printf = "%s %d"
 
 // room for one exit function
 #pragma output CLIB_EXIT_STACK_SIZE = 1

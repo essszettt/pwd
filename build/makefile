@@ -16,9 +16,9 @@ SRCS = $(SRC_DIR)/main.c
 # Compiler-Flags
 CFLAGS  = -compiler=sdcc -clib=sdcc_iy -SO3 --max-allocs-per-node200000 --opt-code-size -I$(INC_DIR) -pragma-include:$(INC_DIR)/zpragma.inc
 CFLAGS += -startup=30
-# CFLAGS += -v           # verbose output
+CFLAGS += -v           # verbose output
 # CFLAGS += --list       # create list files
-CFLAGS += -D__DEBUG__  # create debug code
+# CFLAGS += -D__DEBUG__  # create debug code
 
 # Linker-Flags
 LDFLAGS  = -subtype=dot -Cz"--clean" -create-app -o $(BUILD_DIR)/$(APPNAME) 
@@ -33,12 +33,10 @@ all:
 	$(CC)
 
 # Bereinigen der Build-Dateien
-# rm -f $(BUILD_DIR)/$(APPNAME) *.o *.bin *.sym
-# rm -f $(BUILD_DIR)/$(APPNAME).map
 clean:
-	rm -f $(BUILD_DIR)/$(APPNAME)
-	rm -f $(BUILD_DIR)/$(APPNAME).lis
-	rm -f $(BUILD_DIR)/$(APPNAME).map
-	rm -f $(BUILD_DIR)/$(APPNAME).sym
-	rm -f $(SRC_DIR)/*.lis
-	rm -f $(SRC_DIR)/*.sym
+	@rm -f $(BUILD_DIR)/$(APPNAME)
+	@rm -f $(BUILD_DIR)/$(APPNAME).lis
+	@rm -f $(BUILD_DIR)/$(APPNAME).map
+	@rm -f $(BUILD_DIR)/$(APPNAME).sym
+	@rm -f $(SRC_DIR)/*.lis
+	@rm -f $(SRC_DIR)/*.sym
