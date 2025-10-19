@@ -23,3 +23,5 @@ For anyone (like me) who keeps forgetting that "CD" does exactly the same thing 
 ### HISTORY
 
     0.1.0    Initial release
+    0.1.1    Error handling of esxDOS function call improved
+    0.1.2    Normalization of the printed path reworked [no trailing '/' anymore]
