@@ -9,7 +9,7 @@
 |                                                                              |
 | description:                                                                 |
 |                                                                              |
-| Applicatopn to print current working directory in ZX Spectrum Next           |
+| Application to print current working directory in ZX Spectrum Next           |
 |                                                                              |
 +------------------------------------------------------------------------------+
 |                                                                              |
@@ -267,24 +267,6 @@ int parseArguments(int argc, char* argv[])
       {
         g_tState.eAction = ACTION_INFO;
       }
-     #if 0
-      else if ((0 == strcmp(acArg, "-q")) /* || (0 == stricmp(acArg, "--quiet")) */)
-      {
-        g_tState.bQuiet = true;
-      }
-      else if ((0 == strcmp(acArg, "-f")) /* || (0 == stricmp(acArg, "--force")) */)
-      {
-        g_tState.bForce = true;
-      }
-      else if ((0 == stricmp(acArg, "-c")) || (0 == stricmp(acArg, "--count")))
-      {
-        if ((i + 1) < argc)
-        {
-          g_tState.uiCount = strtoul(argv[i + 1], 0, 0);
-          ++i;
-        }
-      }
-     #endif
       else
       {
         fprintf(stderr, "unknown option: %s\n", acArg);
@@ -294,7 +276,9 @@ int parseArguments(int argc, char* argv[])
     }
     else
     {
-      /* snprintf(g_tState.bmpfile.acPathName, sizeof(g_tState.bmpfile.acPathName), "%s", acArg); */
+      fprintf(stderr, "unexpected argument: %s\n", acArg);
+      iReturn = EINVAL;
+      break;
     }
 
     ++i;
@@ -314,12 +298,16 @@ int parseArguments(int argc, char* argv[])
 /*----------------------------------------------------------------------------*/
 int showHelp(void)
 {
+  unsigned char acAppName[0x10];
+  strncpy(acAppName, VER_INTERNALNAME_STR, sizeof(acAppName));
+  strupr(acAppName);
+
   printf("%s\n\n", VER_FILEDESCRIPTION_STR);
 
   printf("%s\n\n", "For anyone (like me) who keeps forgetting that \"CD\" " \
          "does exactly the same thing ...");
 
-  printf("%s [-h][-v]\n\n", strupr(VER_INTERNALNAME_STR));
+  printf("%s [-h][-v]\n\n", acAppName);
   //      0.........1.........2.........3.
   printf(" -h[elp]     print this help\n");
   printf(" -v[ersion]  print version info\n");
@@ -333,9 +321,18 @@ int showHelp(void)
 /*----------------------------------------------------------------------------*/
 int showInfo(void)
 {
-  printf("%s " VER_LEGALCOPYRIGHT_STR "\n", strupr(VER_INTERNALNAME_STR));
+  uint16_t uiOsVersion = esx_m_dosversion();
+
+  unsigned char acAppName[0x10];
+  strncpy(acAppName, VER_INTERNALNAME_STR, sizeof(acAppName));
+  strupr(acAppName);
+
+  printf("%s " VER_LEGALCOPYRIGHT_STR "\n", acAppName);
   //      0.........1.........2.........3.
-  printf(" Version %s\n", VER_FILEVERSION_STR);
+  printf(" Version %s (NextOS %d.%02d)\n",
+         VER_FILEVERSION_STR,
+         ESX_DOSVERSION_NEXTOS_MAJOR(uiOsVersion),
+         ESX_DOSVERSION_NEXTOS_MINOR(uiOsVersion));
   printf(" Stefan Zell (info@diezells.de)\n");
 
   return EOK;

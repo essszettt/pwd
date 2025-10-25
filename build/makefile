@@ -1,38 +1,53 @@
-# Zielplattform
+### Target Platform ####################
 TARGET = zxn
 
-# Name der Ausgabe-Datei
+### Application Name ###################
 APPNAME = pwd
 
-# Verzeichnisse
+### SOurce Directories #################
 SRC_DIR = ../src
 INC_DIR = ../inc
 BUILD_DIR = .
 
-# Quellcode-Dateien
+### Source Files #######################
 SRCS = $(SRC_DIR)/main.c
 # SRCS += $(SRC_DIR)/zxn_utils.c
 
-# Compiler-Flags
-CFLAGS  = -compiler=sdcc -clib=sdcc_iy -SO3 --max-allocs-per-node200000 --opt-code-size -I$(INC_DIR) -pragma-include:$(INC_DIR)/zpragma.inc
+### Compiler Flags #####################
+CFLAGS = -compiler=sdcc --vc -clib=sdcc_iy -SO3 --opt-code-size -I$(INC_DIR) -pragma-include:$(INC_DIR)/zpragma.inc
+
+# select CRT
 CFLAGS += -startup=30
-CFLAGS += -v           # verbose output
-# CFLAGS += --list       # create list files
-# CFLAGS += -D__DEBUG__  # create debug code
 
-# Linker-Flags
-LDFLAGS  = -subtype=dot -Cz"--clean" -create-app -o $(BUILD_DIR)/$(APPNAME) 
-# LDFLAGS += -m  # create map file
-# LDFLAGS += -s  # create symbol files
+# tradeoff speed vs. quality
+CFLAGS += --max-allocs-per-node200000
 
-# Compiler-Befehl
+# verbose output
+# CFLAGS += -v
+
+# create list files
+# CFLAGS += --list
+
+# create debug code
+# CFLAGS += -D__DEBUG__
+
+### Linker Flags #######################
+LDFLAGS = -subtype=dot -Cz"--clean" -create-app -o $(BUILD_DIR)/$(APPNAME) 
+
+# create map file
+# LDFLAGS += -m  
+
+# create symbol files
+# LDFLAGS += -s  
+
+### Compiler Command ###################
 CC = zcc +$(TARGET) $(CFLAGS) $(SRCS) $(LDFLAGS)
 
-# Standard-Build-Ziel
+### Build target #######################
 all:
 	$(CC)
 
-# Bereinigen der Build-Dateien
+### Clean Build Files ##################
 clean:
 	@rm -f $(BUILD_DIR)/$(APPNAME)
 	@rm -f $(BUILD_DIR)/$(APPNAME).lis
